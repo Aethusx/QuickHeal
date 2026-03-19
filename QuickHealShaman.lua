@@ -67,33 +67,32 @@ local function CheckShamanBuffs(inCombat)
         if success and auras then
             for i = 1, 31 do -- slots 1-31 are buffs
                 local spellId = auras[i]
-                if spellId and spellId > 0 and GetSpellNameAndRankForId then
-                    local name = GetSpellNameAndRankForId(spellId)
-                    if name == "Nature's Swiftness" then
+                if spellId and spellId > 0 then
+                    if spellId == 17116 then -- Nature's Swiftness
                         QuickHeal_debug("BUFF: Nature's Swiftness [" .. spellId .. "] (out of combat healing forced)")
                         inCombat = false
-                    elseif name == "Hand of Edward the Odd" then
+                    elseif spellId == 18803 then -- Focus (Hand of Edward the Odd)
                         QuickHeal_debug("BUFF: Hand of Edward the Odd [" .. spellId .. "] (out of combat healing forced)")
                         inCombat = false
                     end
                 end
             end
-            return inCombat
         end
     end
 
-    -- Fallback: texture-based detection (when Nampower is not available)
+    -- Texture-based detection (fallback for buffs not caught by Nampower aura names)
     -- Detect Nature's Swiftness (next nature spell is instant cast)
-    if QuickHeal_DetectBuff('player', "Spell_Nature_RavenForm") then
-        QuickHeal_debug("BUFF: Nature's Swiftness (out of combat healing forced)")
+    if not (inCombat == false) and QuickHeal_DetectBuff('player', "Spell_Nature_RavenForm") then
+        QuickHeal_debug("BUFF: Nature's Swiftness (texture fallback)")
         inCombat = false
     end
 
     -- Detect Hand of Edward the Odd (next spell is instant cast)
     -- Note: Must exclude "Protective Light" which uses icon "Spell_Holy_SearingLightPriest"
-    if QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight") and
+    if not (inCombat == false) and
+       QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight") and
        not QuickHeal_DetectBuff('player', "Spell_Holy_SearingLightPriest") then
-        QuickHeal_debug("BUFF: Hand of Edward the Odd (out of combat healing forced)")
+        QuickHeal_debug("BUFF: Hand of Edward the Odd (texture fallback)")
         inCombat = false
     end
 
@@ -244,6 +243,8 @@ function QuickHeal_Shaman_FindHealSpellToUse(target, healType, multiplier, force
 
     debug("Target debuff healing modifier", HDB)
     healneed = healneed / HDB
+
+    if healneed <= 0 then return nil, 0 end
 
     -- Check for overheal
     if multiplier and multiplier > 1.0 then

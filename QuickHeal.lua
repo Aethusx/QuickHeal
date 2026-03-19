@@ -2613,13 +2613,10 @@ local function HasRejuvRank1()
 end
 
 local function _CastSpell(spellID, spellbookType)
-    if has_pepo_nam then
-        local spellname, spellrank = GetSpellName(spellID, BOOKTYPE_SPELL);
-        local spell = spellname .. "(" .. spellrank .. ")";
-        CastSpellByNameNoQueue(spell);
-    else
-        CastSpell(spellID, spellbookType);
-    end
+    -- Always use CastSpell here to enter targeting mode (cursor spell)
+    -- CastSpellByNameNoQueue would actually cast the spell instead of
+    -- placing it on the cursor for SpellCanTargetUnit range checks
+    CastSpell(spellID, spellbookType);
 end
 
 function CastCheckSpell()
@@ -3632,16 +3629,16 @@ end
 -- Heals the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 function QuickChainHeal(Target, SpellID, extParam, forceMaxRank)
-    -- Only one instance of QuickHeal allowed at a time
-    --if QuickHealBusy then
-    --if HealingTarget and MassiveOverhealInProgress then
-    --QuickHeal_debug("Massive overheal aborted.");
-    --SpellStopCasting();
-    --else
-    --QuickHeal_debug("Healing in progress, command ignored");
-    -- end
-    -- return ;
-    -- end
+    -- If a heal is already in progress, cleanly stop it before proceeding.
+    -- This prevents CastCheckSpell from interrupting an active cast mid-frame,
+    -- which causes pfUI (and similar addons) to lose track of the cast bar.
+    if HealingTarget then
+        QuickHealConfig:UnregisterEvent("SPELLCAST_STOP");
+        QuickHealConfig:UnregisterEvent("SPELLCAST_FAILED");
+        QuickHealConfig:UnregisterEvent("SPELLCAST_INTERRUPTED");
+        SpellStopCasting();
+        StopMonitor("Re-cast");
+    end
 
     QuickHealBusy = true;
     local AutoSelfCast = GetCVar("autoSelfCast");
@@ -3832,16 +3829,16 @@ end
 -- Heals the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
-    -- Only one instance of QuickHeal allowed at a time
-    --if QuickHealBusy then
-    --if HealingTarget and MassiveOverhealInProgress then
-    --QuickHeal_debug("Massive overheal aborted.");
-    --SpellStopCasting();
-    --else
-    --QuickHeal_debug("Healing in progress, command ignored");
-    --end
-    --return ;
-    --end
+    -- If a heal is already in progress, cleanly stop it before proceeding.
+    -- This prevents CastCheckSpell from interrupting an active cast mid-frame,
+    -- which causes pfUI (and similar addons) to lose track of the cast bar.
+    if HealingTarget then
+        QuickHealConfig:UnregisterEvent("SPELLCAST_STOP");
+        QuickHealConfig:UnregisterEvent("SPELLCAST_FAILED");
+        QuickHealConfig:UnregisterEvent("SPELLCAST_INTERRUPTED");
+        SpellStopCasting();
+        StopMonitor("Re-cast");
+    end
 
     QuickHealBusy = true;
     local AutoSelfCast = GetCVar("autoSelfCast");

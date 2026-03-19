@@ -76,36 +76,27 @@ local function CheckPaladinBuffs()
             for i = 1, 31 do -- slots 1-31 are buffs
                 local spellId = auras[i]
                 if spellId and spellId > 0 then
-                    -- Direct spell ID match for Holy Judgement
-                    if HOLY_JUDGEMENT_BUFF_IDS[spellId] then
+                    if HOLY_JUDGEMENT_BUFF_IDS[spellId] then -- Holy Judgement
                         QuickHeal_debug("BUFF: Holy Judgement [" .. spellId .. "] (HL forced)")
                         forceHL = true
-                        break
-                    end
-                    -- Name-based match for Hand of Edward the Odd
-                    if GetSpellNameAndRankForId then
-                        local name = GetSpellNameAndRankForId(spellId)
-                        if name == "Hand of Edward the Odd" then
-                            QuickHeal_debug("BUFF: Hand of Edward the Odd [" .. spellId .. "] (HL forced)")
-                            forceHL = true
-                            break
-                        end
+                    elseif spellId == 18803 then -- Focus (Hand of Edward the Odd)
+                        QuickHeal_debug("BUFF: Hand of Edward the Odd [" .. spellId .. "] (HL forced)")
+                        forceHL = true
                     end
                 end
             end
-            return forceHL
         end
     end
 
-    -- Fallback: texture-based detection (when Nampower is not available)
+    -- Texture-based detection (fallback for buffs not caught by Nampower aura names)
     -- Use $ anchor for exact texture end-match to reduce false positives
-    if QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight$") and
+    if not forceHL and QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight$") and
        not QuickHeal_DetectBuff('player', "Spell_Holy_SearingLightPriest") then
-        QuickHeal_debug("BUFF: Hand of Edward the Odd (HL forced)")
+        QuickHeal_debug("BUFF: Hand of Edward the Odd (texture fallback, HL forced)")
         forceHL = true
     end
-    if QuickHeal_DetectBuff('player', "ability_paladin_judgementblue$") then
-        QuickHeal_debug("BUFF: Holy Judgement (HL forced)")
+    if not forceHL and QuickHeal_DetectBuff('player', "ability_paladin_judgementblue$") then
+        QuickHeal_debug("BUFF: Holy Judgement (texture fallback, HL forced)")
         forceHL = true
     end
 
@@ -158,6 +149,8 @@ function QuickHeal_Paladin_FindSpellToUse(target, healType, multiplier, forceMax
 
     debug("Target debuff healing modifier", HDB)
     healneed = healneed / HDB
+
+    if healneed <= 0 then return nil, 0 end
 
     -- Check for overheal
     if multiplier and multiplier > 1.0 then
@@ -564,6 +557,32 @@ function qhHShock(SHOCKminHP)
                 -- Need to switch target
                 TargetUnit(target)
                 CastSpellByName("Holy Shock")
+                if hadTarget then
+                    TargetLastTarget()
+                else
+                    ClearTarget()
+                end
+            end
+        end
+    end
+end
+
+-- /run qhBoP(20) - Blessing of Protection on lowest HP ally at 20% threshold
+function qhBoP(BOPminHP)
+    local target, healthPct = GetLowestHealthUnit()
+    if target and healthPct < BOPminHP then
+        if SUPERWOW_VERSION then
+            CastSpellByName("Blessing of Protection", target)
+        else
+            local hadTarget = UnitExists("target")
+
+            if target == "player" then
+                CastSpellByName("Blessing of Protection", true)
+            elseif UnitIsUnit(target, "target") then
+                CastSpellByName("Blessing of Protection")
+            else
+                TargetUnit(target)
+                CastSpellByName("Blessing of Protection")
                 if hadTarget then
                     TargetLastTarget()
                 else

@@ -84,53 +84,53 @@ local function CheckDruidBuffs(inCombat, manaLeft, healneed, mods)
         if success and auras then
             for i = 1, 31 do -- slots 1-31 are buffs
                 local spellId = auras[i]
-                if spellId and spellId > 0 and GetSpellNameAndRankForId then
-                    local name = GetSpellNameAndRankForId(spellId)
-                    if name == "Clearcasting" then
+                if spellId and spellId > 0 then
+                    if spellId == 16870 then -- Clearcasting (Omen of Clarity)
                         QuickHeal_debug("BUFF: Clearcasting [" .. spellId .. "] (Omen of Clarity)")
                         manaLeft = QH_GetUnitMaxMana('player')
                         healneed = 10 ^ 6
-                    elseif name == "Nature's Swiftness" then
+                    elseif spellId == 17116 then -- Nature's Swiftness
                         QuickHeal_debug("BUFF: Nature's Swiftness [" .. spellId .. "] (HT forced)")
                         forceHTinCombat = true
-                    elseif name == "Hand of Edward the Odd" then
+                    elseif spellId == 18803 then -- Focus (Hand of Edward the Odd)
                         QuickHeal_debug("BUFF: Hand of Edward the Odd [" .. spellId .. "] (out of combat healing forced)")
                         inCombat = false
-                    elseif name == "Wushoolay's Charm of Nature" or name == "Wushoolay Charm" then
+                    elseif spellId == 24542 then -- Nimble Healing Touch (Wushoolay's Charm of Nature)
                         QuickHeal_debug("BUFF: Wushoolay [" .. spellId .. "] (healing touch forced)")
                         forceHTinCombat = true
                     end
                 end
             end
-            return inCombat, manaLeft, healneed, forceHTinCombat
         end
     end
 
-    -- Fallback: texture-based detection (when Nampower is not available)
+    -- Texture-based detection (fallback for buffs not caught by Nampower aura names)
     -- Detect Clearcasting (from Omen of Clarity)
-    if QuickHeal_DetectBuff('player', "Spell_Shadow_ManaBurn", 1) then
-        QuickHeal_debug("BUFF: Clearcasting (Omen of Clarity)")
+    if manaLeft ~= QH_GetUnitMaxMana('player') and
+       QuickHeal_DetectBuff('player', "Spell_Shadow_ManaBurn", 1) then
+        QuickHeal_debug("BUFF: Clearcasting (Omen of Clarity, texture fallback)")
         manaLeft = QH_GetUnitMaxMana('player')
         healneed = 10 ^ 6
     end
 
     -- Detect Nature's Swiftness (next nature spell is instant cast)
-    if QuickHeal_DetectBuff('player', "Spell_Nature_RavenForm") then
-        QuickHeal_debug("BUFF: Nature's Swiftness (out of combat healing forced)")
+    if not forceHTinCombat and QuickHeal_DetectBuff('player', "Spell_Nature_RavenForm") then
+        QuickHeal_debug("BUFF: Nature's Swiftness (texture fallback)")
         forceHTinCombat = true
     end
 
     -- Detect Hand of Edward the Odd (next spell is instant cast)
     -- Note: Must exclude "Protective Light" which uses icon "Spell_Holy_SearingLightPriest"
-    if QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight") and
+    if not (inCombat == false) and
+       QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight") and
        not QuickHeal_DetectBuff('player', "Spell_Holy_SearingLightPriest") then
-        QuickHeal_debug("BUFF: Hand of Edward the Odd (out of combat healing forced)")
+        QuickHeal_debug("BUFF: Hand of Edward the Odd (texture fallback)")
         inCombat = false
     end
 
     -- Detect Wushoolay's Charm of Nature (Trinket from Zul'Gurub)
-    if QuickHeal_DetectBuff('player', "Spell_Nature_Regenerate") then
-        QuickHeal_debug("BUFF: Wushoolay (healing touch forced)")
+    if not forceHTinCombat and QuickHeal_DetectBuff('player', "Spell_Nature_Regenerate") then
+        QuickHeal_debug("BUFF: Wushoolay (texture fallback)")
         forceHTinCombat = true
     end
 

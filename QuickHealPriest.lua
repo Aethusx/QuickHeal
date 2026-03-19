@@ -80,44 +80,44 @@ local function CheckPriestBuffs(target, inCombat, manaLeft, healneed)
         if success and auras then
             for i = 1, 31 do -- slots 1-31 are buffs
                 local spellId = auras[i]
-                if spellId and spellId > 0 and GetSpellNameAndRankForId then
-                    local name = GetSpellNameAndRankForId(spellId)
-                    if name == "Hand of Edward the Odd" then
+                if spellId and spellId > 0 then
+                    if spellId == 18803 then -- Focus (Hand of Edward the Odd)
                         QuickHeal_debug("BUFF: Hand of Edward the Odd [" .. spellId .. "] (out of combat healing forced)")
                         inCombat = false
-                    elseif name == "Hazza'rah's Charm of Healing" or name == "Hazza'rah Charm" then
+                    elseif spellId == 24546 then -- Rapid Healing (Hazza'rah's Charm of Healing)
                         QuickHeal_debug("BUFF: Hazza'rah buff [" .. spellId .. "] (Greater Heal forced)")
                         forceGH = true
-                    elseif name == "Inner Focus" or name == "Spirit of Redemption" then
-                        QuickHeal_debug("BUFF: " .. name .. " [" .. spellId .. "] (free mana)")
+                    elseif spellId == 14751 or spellId == 20711 then -- Inner Focus / Spirit of Redemption
+                        QuickHeal_debug("BUFF: Free mana [" .. spellId .. "]")
                         manaLeft = QH_GetUnitMaxMana('player')
                         healneed = 1000000
                     end
                 end
             end
-            return inCombat, manaLeft, healneed, forceGH
         end
     end
 
-    -- Fallback: texture-based detection (when Nampower is not available)
+    -- Texture-based detection (fallback for buffs not caught by Nampower aura names)
     -- Hand of Edward the Odd - instant cast
     -- Note: Must exclude "Protective Light" which uses icon "Spell_Holy_SearingLightPriest"
-    if QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight") and
+    if not (inCombat == false) and
+       QuickHeal_DetectBuff('player', "Spell_Holy_SearingLight") and
        not QuickHeal_DetectBuff('player', "Spell_Holy_SearingLightPriest") then
-        QuickHeal_debug("BUFF: Hand of Edward the Odd (out of combat healing forced)")
+        QuickHeal_debug("BUFF: Hand of Edward the Odd (texture fallback, out of combat healing forced)")
         inCombat = false
     end
 
     -- Hazza'rah's Charm - force Greater Heal
-    if QuickHeal_DetectBuff('player', "Spell_Holy_HealingAura") then
-        QuickHeal_debug("BUFF: Hazza'rah buff (Greater Heal forced)")
+    if not forceGH and QuickHeal_DetectBuff('player', "Spell_Holy_HealingAura") then
+        QuickHeal_debug("BUFF: Hazza'rah buff (texture fallback, Greater Heal forced)")
         forceGH = true
     end
 
     -- Inner Focus or Spirit of Redemption - free mana
-    if QuickHeal_DetectBuff('player', "Spell_Frost_WindWalkOn", 1) or
-        QuickHeal_DetectBuff('player', "Spell_Holy_GreaterHeal") then
-        QuickHeal_debug("Inner Focus or Spirit of Redemption active")
+    if manaLeft ~= QH_GetUnitMaxMana('player') and
+       (QuickHeal_DetectBuff('player', "Spell_Frost_WindWalkOn", 1) or
+        QuickHeal_DetectBuff('player', "Spell_Holy_GreaterHeal")) then
+        QuickHeal_debug("Inner Focus or Spirit of Redemption active (texture fallback)")
         manaLeft = QH_GetUnitMaxMana('player')
         healneed = 1000000
     end
