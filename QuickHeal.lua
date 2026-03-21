@@ -1243,10 +1243,12 @@ local function Initialise()
         FindHoTSpellToUse = QuickHeal_Priest_FindHoTSpellToUse;
         FindHoTSpellToUseNoTarget = QuickHeal_Priest_FindHoTSpellToUseNoTarget;
         GetRatioHealthyExplanation = QuickHeal_Priest_GetRatioHealthyExplanation;
+        QuickHealDownrank_Slider_NH:SetMinMaxValues(1, 12);
+        QuickHealDownrank_Slider_NH:SetValue(QuickHealVariables.DownrankValueNH or 12);
+        QuickHealDownrank_Slider_FH:SetMinMaxValues(1, 7);
+        QuickHealDownrank_Slider_FH:SetValue(QuickHealVariables.DownrankValueFH or 7);
         QuickHealMinrank_Slider_NH:SetMinMaxValues(1, 12);
         QuickHealMinrank_Slider_NH:SetValue(QuickHealVariables.MinrankValueNH);
-        QuickHealMinrank_Slider_FH:SetMinMaxValues(1, 7);
-        QuickHealMinrank_Slider_FH:SetValue(QuickHealVariables.MinrankValueFH);
         QuickHealMinrank_Slider_FH:SetMinMaxValues(1, 7);
         QuickHealMinrank_Slider_FH:SetValue(QuickHealVariables.MinrankValueFH);
 
@@ -1289,9 +1291,9 @@ local function Initialise()
 
         -- Configure for Paladin
         QuickHealDownrank_Slider_NH:SetMinMaxValues(1, 9); -- Holy Light ranks
-        QuickHealDownrank_Slider_NH:SetValue(9);
+        QuickHealDownrank_Slider_NH:SetValue(QuickHealVariables.DownrankValueNH or 9);
         QuickHealDownrank_Slider_FH:SetMinMaxValues(1, 7); -- Flash of Light ranks
-        QuickHealDownrank_Slider_FH:SetValue(7);
+        QuickHealDownrank_Slider_FH:SetValue(QuickHealVariables.DownrankValueFH or 7);
 
         QuickHealMinrank_Slider_NH:SetMinMaxValues(1, 9);
         QuickHealMinrank_Slider_NH:SetValue(QuickHealVariables.MinrankValueNH);
@@ -1328,9 +1330,9 @@ local function Initialise()
         FindHoTSpellToUseNoTarget = QuickHeal_Druid_FindHoTSpellToUseNoTarget;
         GetRatioHealthyExplanation = QuickHeal_Druid_GetRatioHealthyExplanation;
         QuickHealDownrank_Slider_NH:SetMinMaxValues(1, 11);
-        QuickHealDownrank_Slider_NH:SetValue(11);
+        QuickHealDownrank_Slider_NH:SetValue(QuickHealVariables.DownrankValueNH or 11);
         QuickHealDownrank_Slider_FH:SetMinMaxValues(1, 9);
-        QuickHealDownrank_Slider_FH:SetValue(9);
+        QuickHealDownrank_Slider_FH:SetValue(QuickHealVariables.DownrankValueFH or 9);
         QuickHealMinrank_Slider_NH:SetMinMaxValues(1, 11);
         QuickHealMinrank_Slider_NH:SetValue(QuickHealVariables.MinrankValueNH);
         QuickHealMinrank_Slider_FH:SetMinMaxValues(1, 9);
