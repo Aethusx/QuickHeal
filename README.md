@@ -139,6 +139,13 @@ Cast max rank Holy Shock.
 ```
 Cast max rank Flash of Light (or Holy Light if Holy Judgement buff active).
 
+### Blessing of Protection
+
+```
+/run qhBoP(20)
+```
+Cast Blessing of Protection on the lowest HP ally below the given threshold (20% in this example). Useful for saving a low-health target from physical damage.
+
 ### Melee Paladin Macros
 
 These macros are for paladins healing in melee range and do not cancel autoattack:
