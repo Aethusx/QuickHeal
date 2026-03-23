@@ -2668,13 +2668,9 @@ function CastCheckSpell()
     local _, class = UnitClass('player');
     class = string.lower(class);
     if class == "druid" then
-        if HasRejuvRank1() then
-            -- Cast Rejuvenation if Rank 1 exists in spellbook
-            _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_REJUVENATION)[1].SpellID, BOOKTYPE_SPELL);
-        else
-            -- Fallback to Healing Touch
-            _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_TOUCH)[1].SpellID, BOOKTYPE_SPELL);
-        end
+        -- Use Healing Touch (cast-time spell) to avoid Nampower/SuperWoW
+        -- auto-casting instant Rejuvenation on self during range checks
+        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_TOUCH)[1].SpellID, BOOKTYPE_SPELL);
     elseif class == "paladin" then
         _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HOLY_LIGHT)[1].SpellID, BOOKTYPE_SPELL);
     elseif class == "priest" then
@@ -2688,15 +2684,14 @@ function CastCheckSpellHOT()
     local _, class = UnitClass('player');
     class = string.lower(class);
 
-    --QuickHeal_debug("********** BREAKPOINT: CastCheckSpellHOT() **********");
+    -- Use cast-time spells to avoid Nampower/SuperWoW auto-casting
+    -- instant HoTs (Rejuvenation/Renew/Holy Shock) on self during range checks
     if class == "druid" then
-        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_REJUVENATION)[1].SpellID, BOOKTYPE_SPELL);
+        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_TOUCH)[1].SpellID, BOOKTYPE_SPELL);
     elseif class == "paladin" then
-        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HOLY_SHOCK)[1].SpellID, BOOKTYPE_SPELL);
+        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HOLY_LIGHT)[1].SpellID, BOOKTYPE_SPELL);
     elseif class == "priest" then
-        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_RENEW)[1].SpellID, BOOKTYPE_SPELL);
-        --elseif class == "shaman" then
-        --    CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_WAVE)[1].SpellID, BOOKTYPE_SPELL);
+        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_LESSER_HEAL)[1].SpellID, BOOKTYPE_SPELL);
     end
     --QuickHeal_debug("********** BREAKPOINT: CastCheckSpellHOT() done **********");
 end
