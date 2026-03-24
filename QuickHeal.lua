@@ -1,7 +1,7 @@
 QuickHeal = AceLibrary("AceAddon-2.0"):new("AceConsole-2.0", "AceEvent-2.0")
 
 -- other libs ----------------------------------------------------------------------------------
-HealComm = AceLibrary("HealComm-1.0")
+-- HealComm is provided by libs/QHealComm.lua (pfUI libpredict delegate + standalone fallback)
 
 --[ Mod data ]--
 QuickHealData = {
@@ -1473,18 +1473,8 @@ end
 local function GetOtherIncomingHeals(unitName)
     if not HealComm or not HealComm.getHeal then return 0 end
     local total = HealComm:getHeal(unitName) or 0
-    -- Subtract our own heal entry from the total
-    if HealComm.Heals and HealComm.Heals[unitName] and HealComm.Heals[unitName][me] then
-        total = total - (HealComm.Heals[unitName][me].amount or 0)
-    end
-    if HealComm.GrpHeals and HealComm.GrpHeals[me] then
-        for _, target in pairs(HealComm.GrpHeals[me].targets or {}) do
-            if target == unitName then
-                total = total - (HealComm.GrpHeals[me].amount or 0)
-                break
-            end
-        end
-    end
+    local myPending = HealComm:GetMyPendingHeal(unitName) or 0
+    total = total - myPending
     if total < 0 then total = 0 end
     return total
 end
@@ -3476,6 +3466,9 @@ local function ExecuteHeal(Target, SpellID)
     QuickHeal_debug("  Casting: " ..
         SpellNameAndRank .. " on " .. UnitFullName(Target) .. " (" .. Target .. ")" .. ", ID: " .. SpellID);
 
+    -- Announce pending heal to HealComm (consumed by SPELLCAST_START)
+    HealComm:SetPendingHeal(UnitName(Target) or UnitFullName(Target), HealingSpellSize)
+
     -- Check range and line of sight before casting (UnitXP)
     if has_unitxp then
         -- Check distance (40 yards for most healing spells)
@@ -3609,6 +3602,18 @@ local function ExecuteHOT(Target, SpellID)
         else
             CastSpellByName(SpellNameAndRank, guid)
         end
+
+        -- Announce HoT to HealComm
+        local hotType, hotDur
+        if SpellName == "Rejuvenation" then hotType, hotDur = "Reju", 12
+        elseif SpellName == "Renew" then hotType, hotDur = "Renew", 15
+        elseif SpellName == "Regrowth" then hotType, hotDur = "Regr", 20
+        end
+        if hotType and HealComm and HealComm.AnnounceHot then
+            local rankNum = SpellRank and tonumber(string.match(SpellRank, "%d+"))
+            HealComm:AnnounceHot(UnitName(Target) or UnitFullName(Target), hotType, hotDur, rankNum)
+        end
+
         return
     end
 
@@ -3662,6 +3667,17 @@ local function ExecuteHOT(Target, SpellID)
     -- just in case something went wrong here (Healing people in duels!)
     if SpellIsTargeting() then
         SpellStopTargeting()
+    end
+
+    -- Announce HoT to HealComm
+    local hotType, hotDur
+    if SpellName == "Rejuvenation" then hotType, hotDur = "Reju", 12
+    elseif SpellName == "Renew" then hotType, hotDur = "Renew", 15
+    elseif SpellName == "Regrowth" then hotType, hotDur = "Regr", 20
+    end
+    if hotType and HealComm and HealComm.AnnounceHot then
+        local rankNum = SpellRank and tonumber(string.match(SpellRank, "%d+"))
+        HealComm:AnnounceHot(UnitName(Target) or UnitFullName(Target), hotType, hotDur, rankNum)
     end
 
     -- Reacquire target if it was changed earlier
