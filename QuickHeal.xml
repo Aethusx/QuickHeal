@@ -2513,11 +2513,108 @@
                     </OnLeave>
                 </Scripts>
             </CheckButton>
-
+            <!-- FilterRaidGroup6 Checkbutton -->
+            <CheckButton name="QuickHealConfig_FilterRaidGroup6CheckBox" inherits="OptionsCheckButtonTemplate" checked="true">
+                <Size><AbsDimension x="20" y="20"/></Size>
+                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="152" y="-110"></AbsDimension></Offset></Anchor></Anchors>
+                <Scripts>
+                    <onClick>
+                        if this:GetChecked() then
+                        QuickHealVariables["FilterRaidGroup6"] = false;
+                        else
+                        QuickHealVariables["FilterRaidGroup6"] = true;
+                        end
+                        if( this.tooltipShown ) then
+                        GameTooltip:SetText("Raid group 6 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
+                        end
+                    </onClick>
+                    <OnShow>
+                        if QuickHealVariables["FilterRaidGroup6"] then
+                        this:SetChecked(false);
+                        else
+                        this:SetChecked(true);
+                        end
+                    </OnShow>
+                    <OnEnter>
+                        GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT");
+                        GameTooltip:SetText("Raid group 6 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
+                        this.tooltipShown = true;
+                    </OnEnter>
+                    <OnLeave>
+                        GameTooltip:Hide();
+                        this.tooltipShown = false;
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <!-- FilterRaidGroup7 Checkbutton -->
+            <CheckButton name="QuickHealConfig_FilterRaidGroup7CheckBox" inherits="OptionsCheckButtonTemplate" checked="true">
+                <Size><AbsDimension x="20" y="20"/></Size>
+                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="32" y="-130"></AbsDimension></Offset></Anchor></Anchors>
+                <Scripts>
+                    <onClick>
+                        if this:GetChecked() then
+                        QuickHealVariables["FilterRaidGroup7"] = false;
+                        else
+                        QuickHealVariables["FilterRaidGroup7"] = true;
+                        end
+                        if( this.tooltipShown ) then
+                        GameTooltip:SetText("Raid group 7 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
+                        end
+                    </onClick>
+                    <OnShow>
+                        if QuickHealVariables["FilterRaidGroup7"] then
+                        this:SetChecked(false);
+                        else
+                        this:SetChecked(true);
+                        end
+                    </OnShow>
+                    <OnEnter>
+                        GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT");
+                        GameTooltip:SetText("Raid group 7 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
+                        this.tooltipShown = true;
+                    </OnEnter>
+                    <OnLeave>
+                        GameTooltip:Hide();
+                        this.tooltipShown = false;
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
+            <!-- FilterRaidGroup8 Checkbutton -->
+            <CheckButton name="QuickHealConfig_FilterRaidGroup8CheckBox" inherits="OptionsCheckButtonTemplate" checked="true">
+                <Size><AbsDimension x="20" y="20"/></Size>
+                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="152" y="-130"></AbsDimension></Offset></Anchor></Anchors>
+                <Scripts>
+                    <onClick>
+                        if this:GetChecked() then
+                        QuickHealVariables["FilterRaidGroup8"] = false;
+                        else
+                        QuickHealVariables["FilterRaidGroup8"] = true;
+                        end
+                        if( this.tooltipShown ) then
+                        GameTooltip:SetText("Raid group 8 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
+                        end
+                    </onClick>
+                    <OnShow>
+                        if QuickHealVariables["FilterRaidGroup8"] then
+                        this:SetChecked(false);
+                        else
+                        this:SetChecked(true);
+                        end
+                    </OnShow>
+                    <OnEnter>
+                        GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT");
+                        GameTooltip:SetText(QuickHealMinrank_Label_NH:GetText());
+                        this.tooltipShown = true;
+                    </OnEnter>
+                    <OnLeave>
+                        GameTooltip:Hide();
+                        this.tooltipShown = false;
+                    </OnLeave>
+                </Scripts>
+            </CheckButton>
         </Frames>
     </Frame>
 
-    <!-- Downrank Slider Frame -->
     <!-- Downrank Slider Frame -->
     <Frame name="QuickHeal_DownrankSlider" frameStrata="DIALOG" toplevel="true" parent="UIParent" hidden="true"
         movable="true" enableMouse="true">
@@ -2630,73 +2727,7 @@
                     </OnLeave>
                 </Scripts>
             </Slider>
-            <!-- FilterRaidGroup7 Checkbutton -->
-            <CheckButton name="QuickHealConfig_FilterRaidGroup7CheckBox" inherits="OptionsCheckButtonTemplate" checked="true">
-                <Size><AbsDimension x="20" y="20"/></Size>
-                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="32" y="-130"></AbsDimension></Offset></Anchor></Anchors>
-                <Scripts>
-                    <onClick>
-                        if this:GetChecked() then
-                        QuickHealVariables["FilterRaidGroup7"] = false;
-                        else
-                        QuickHealVariables["FilterRaidGroup7"] = true;
-                        end
-                        if( this.tooltipShown ) then
-                        GameTooltip:SetText("Raid group 7 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
-                        end
-                    </onClick>
-                    <OnShow>
-                        if QuickHealVariables["FilterRaidGroup7"] then
-                        this:SetChecked(false);
-                        else
-                        this:SetChecked(true);
-                        end
-                    </OnShow>
-                    <OnEnter>
-                        GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT");
-                        GameTooltip:SetText("Raid group 7 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
-                        this.tooltipShown = true;
-                    </OnEnter>
-                    <OnLeave>
-                        GameTooltip:Hide();
-                        this.tooltipShown = false;
-                    </OnLeave>
-                </Scripts>
-            </CheckButton>
-            <!-- FilterRaidGroup8 Checkbutton -->
-            <CheckButton name="QuickHealConfig_FilterRaidGroup8CheckBox" inherits="OptionsCheckButtonTemplate" checked="true">
-                <Size><AbsDimension x="20" y="20"/></Size>
-                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="152" y="-130"></AbsDimension></Offset></Anchor></Anchors>
-                <Scripts>
-                    <onClick>
-                        if this:GetChecked() then
-                        QuickHealVariables["FilterRaidGroup8"] = false;
-                        else
-                        QuickHealVariables["FilterRaidGroup8"] = true;
-                        end
-                        if( this.tooltipShown ) then
-                        GameTooltip:SetText("Raid group 8 will" .. (this:GetChecked() and " " or " not ") .. "be healed.")
-                        end
-                    </onClick>
-                    <OnShow>
-                        if QuickHealVariables["FilterRaidGroup8"] then
-                        this:SetChecked(false);
-                        else
-                        this:SetChecked(true);
-                        end
-                    </OnShow>
-                    <OnEnter>
-                        GameTooltip:SetOwner(this,"ANCHOR_TOPLEFT");
-                        GameTooltip:SetText(QuickHealMinrank_Label_NH:GetText());
-                        this.tooltipShown = true;
-                    </OnEnter>
-                    <OnLeave>
-                        GameTooltip:Hide();
-                        this.tooltipShown = false;
-                    </OnLeave>
-                </Scripts>
-            </CheckButton>
-
+            
             <Button name="QuickHeal_MTList" inherits="GameMenuButtonTemplate" text="MT">
                 <Size>
                     <AbsDimension x="90" y="20"/>
