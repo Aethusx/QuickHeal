@@ -632,7 +632,7 @@ if type(hooksecurefunc) == "function" then
 
         local rankNum = nil
         if rank and rank ~= "" then
-            rankNum = tonumber(string.gsub(rank, "Rank ", "")) or nil
+            rankNum = tonumber((string.gsub(rank, "Rank ", ""))) or nil
         end
 
         -- Instant HoTs
@@ -689,7 +689,7 @@ if type(hooksecurefunc) == "function" then
 
         local rankNum = nil
         if rank and rank ~= "" then
-            rankNum = tonumber(string.gsub(rank, "Rank ", "")) or nil
+            rankNum = tonumber((string.gsub(rank, "Rank ", ""))) or nil
         end
 
         -- Instant HoTs
@@ -733,7 +733,7 @@ if type(hooksecurefunc) == "function" then
 
         local rankNum = nil
         if rank and rank ~= "" then
-            rankNum = tonumber(string.gsub(rank, "Rank ", "")) or nil
+            rankNum = tonumber((string.gsub(rank, "Rank ", ""))) or nil
         end
 
         -- Instant HoTs
