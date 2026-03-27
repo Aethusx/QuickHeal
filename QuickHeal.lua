@@ -3931,6 +3931,10 @@ function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
         extParam = {}
     end
 
+    -- Skip RatioFull check when SpellID is pre-selected (e.g. Prayer of Healing)
+    -- because the caller already validated that healing is needed
+    local skipFullCheck = SpellID and type(SpellID) == "number"
+
     -- Decode special values for Target
     local Restrict = nil;
     if Target then
@@ -3963,7 +3967,7 @@ function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
             else
                 targetPercentage = QH_GetUnitHealth(Target) / 100;
             end
-            if targetPercentage < QHV.RatioFull or QHV.TestMode then
+            if skipFullCheck or targetPercentage < QHV.RatioFull or QHV.TestMode then
                 -- Does need healing (fall through to healing code)
             else
                 -- Does not need healing
