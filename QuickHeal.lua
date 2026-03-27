@@ -3627,7 +3627,11 @@ local function ExecuteHOT(Target, SpellID)
         elseif SpellName == "Regrowth" then hotType, hotDur = "Regr", 20
         end
         if hotType and HealComm and HealComm.AnnounceHot then
-            local rankNum = SpellRank and tonumber(string.match(SpellRank, "%d+"))
+            local rankNum
+            if SpellRank then
+                local _, _, rn = string.find(SpellRank, "(%d+)")
+                rankNum = tonumber(rn)
+            end
             HealComm:AnnounceHot(UnitName(Target) or UnitFullName(Target), hotType, hotDur, rankNum)
         end
 
@@ -3693,7 +3697,11 @@ local function ExecuteHOT(Target, SpellID)
     elseif SpellName == "Regrowth" then hotType, hotDur = "Regr", 20
     end
     if hotType and HealComm and HealComm.AnnounceHot then
-        local rankNum = SpellRank and tonumber(string.match(SpellRank, "%d+"))
+        local rankNum
+        if SpellRank then
+            local _, _, rn = string.find(SpellRank, "(%d+)")
+            rankNum = tonumber(rn)
+        end
         HealComm:AnnounceHot(UnitName(Target) or UnitFullName(Target), hotType, hotDur, rankNum)
     end
 
@@ -4099,11 +4107,7 @@ end
 -- HOTs the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 
-function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
-    QuickHealBusy = true;
-    local AutoSelfCast = GetCVar("autoSelfCast");
-    SetCVar("autoSelfCast", 0);
-
+local function QuickHOT_Inner(Target, SpellID, extParam, forceMaxRank, noHpCheck)
     if not (type(extParam) == "table") then
         extParam = {};
     end
@@ -4119,13 +4123,11 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
             Target = nil;
         else
             Message("You are not in a raid", "Error", 2);
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             return;
         end
     end
 
-    -- ⚙️ Ne clear la target hostile que si le joueur est Paladin
+    -- Clear hostile target only for Paladin
     local hadHostileTarget = false;
     if UnitClass("player") == "Paladin" then
         if UnitExists('target') and not UnitIsFriend('player', 'target') then
@@ -4145,15 +4147,11 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
             end
             if targetPercentage >= QHV.RatioFull then
                 Message(string.format("%s doesn't need healing", UnitFullName(Target) or Target), "Info", 2);
-                SetCVar("autoSelfCast", AutoSelfCast);
-                QuickHealBusy = false;
                 if hadHostileTarget then TargetLastTarget(); end
                 return;
             end
         else
             Message(string.format("%s cannot be healed", UnitFullName(Target) or Target), "Error", 2);
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             if hadHostileTarget then TargetLastTarget(); end
             return;
         end
@@ -4175,8 +4173,6 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
             else
                 Message("You don't need healing", "Info", 2);
             end
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             if hadHostileTarget then TargetLastTarget(); end
             return;
         end
@@ -4208,8 +4204,6 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
         end
         if not SpellID then
             Message("Spell not found", "Error", 2);
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             if hadHostileTarget then TargetLastTarget(); end
             return;
         end
@@ -4221,9 +4215,22 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
     else
         Message("You have no healing spells to cast", "Error", 2);
     end
+end
+
+function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
+    QuickHealBusy = true;
+    local AutoSelfCast = GetCVar("autoSelfCast");
+    SetCVar("autoSelfCast", 0);
+
+    -- pcall ensures autoSelfCast is always restored even if an error occurs
+    local ok, err = pcall(QuickHOT_Inner, Target, SpellID, extParam, forceMaxRank, noHpCheck)
 
     SetCVar("autoSelfCast", AutoSelfCast);
     QuickHealBusy = false;
+
+    if not ok then
+        QuickHeal_debug("QuickHOT error: " .. tostring(err))
+    end
 end
 
 function ToggleDownrankWindow()
