@@ -2797,6 +2797,7 @@ local function FindWhoToHeal(Restrict, extParam)
     -- Cast the checkspell
     CastCheckSpell();
     if not SpellIsTargeting() then
+        SpellStopCasting(); -- flush any spell Nampower queued instead of targeting mode
         -- Reacquire target if it was cleared
         if TargetWasCleared then
             TargetLastTarget();
@@ -3098,6 +3099,7 @@ local function FindWhoToHOT(Restrict, extParam, noHpCheck)
     -- Cast the checkspell
     CastCheckSpellHOT();
     if not SpellIsTargeting() then
+        SpellStopCasting(); -- flush any spell Nampower queued instead of targeting mode
         -- Reacquire target if it was cleared
         if TargetWasCleared then
             TargetLastTarget();
@@ -3627,7 +3629,11 @@ local function ExecuteHOT(Target, SpellID)
         elseif SpellName == "Regrowth" then hotType, hotDur = "Regr", 20
         end
         if hotType and HealComm and HealComm.AnnounceHot then
-            local rankNum = SpellRank and tonumber(string.match(SpellRank, "%d+"))
+            local rankNum
+            if SpellRank then
+                local _, _, rn = string.find(SpellRank, "(%d+)")
+                rankNum = tonumber(rn)
+            end
             HealComm:AnnounceHot(UnitName(Target) or UnitFullName(Target), hotType, hotDur, rankNum)
         end
 
@@ -3693,7 +3699,11 @@ local function ExecuteHOT(Target, SpellID)
     elseif SpellName == "Regrowth" then hotType, hotDur = "Regr", 20
     end
     if hotType and HealComm and HealComm.AnnounceHot then
-        local rankNum = SpellRank and tonumber(string.match(SpellRank, "%d+"))
+        local rankNum
+        if SpellRank then
+            local _, _, rn = string.find(SpellRank, "(%d+)")
+            rankNum = tonumber(rn)
+        end
         HealComm:AnnounceHot(UnitName(Target) or UnitFullName(Target), hotType, hotDur, rankNum)
     end
 
@@ -3941,6 +3951,10 @@ function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
         extParam = {}
     end
 
+    -- Skip RatioFull check when SpellID is pre-selected (e.g. Prayer of Healing)
+    -- because the caller already validated that healing is needed
+    local skipFullCheck = SpellID and type(SpellID) == "number"
+
     -- Decode special values for Target
     local Restrict = nil;
     if Target then
@@ -3973,7 +3987,7 @@ function QuickHeal(Target, SpellID, extParam, forceMaxHPS)
             else
                 targetPercentage = QH_GetUnitHealth(Target) / 100;
             end
-            if targetPercentage < QHV.RatioFull or QHV.TestMode then
+            if skipFullCheck or targetPercentage < QHV.RatioFull or QHV.TestMode then
                 -- Does need healing (fall through to healing code)
             else
                 -- Does not need healing
@@ -4117,29 +4131,7 @@ end
 -- HOTs the specified Target with the specified Spell
 -- If parameters are missing they will be determined automatically
 
-function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
-    -- Block if on GCD or mid-cast to prevent CastCheckSpellHOT() from
-    -- queuing a range-check spell through Nampower
-    if has_nampower and GetCastInfo then
-        local ok, castInfo = pcall(GetCastInfo)
-        if ok and castInfo then
-            if castInfo.castRemainingMs and castInfo.castRemainingMs > 0 then
-                QuickHeal_debug("QuickHOT blocked: cast in progress ("
-                    .. castInfo.castRemainingMs .. "ms remaining)")
-                return
-            end
-            if castInfo.gcdRemainingMs and castInfo.gcdRemainingMs > 0 then
-                QuickHeal_debug("QuickHOT blocked: on GCD ("
-                    .. castInfo.gcdRemainingMs .. "ms remaining)")
-                return
-            end
-        end
-    end
-
-    QuickHealBusy = true;
-    local AutoSelfCast = GetCVar("autoSelfCast");
-    SetCVar("autoSelfCast", 0);
-
+local function QuickHOT_Inner(Target, SpellID, extParam, forceMaxRank, noHpCheck)
     if not (type(extParam) == "table") then
         extParam = {};
     end
@@ -4155,13 +4147,11 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
             Target = nil;
         else
             Message("You are not in a raid", "Error", 2);
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             return;
         end
     end
 
-    -- ⚙️ Ne clear la target hostile que si le joueur est Paladin
+    -- Clear hostile target only for Paladin
     local hadHostileTarget = false;
     if UnitClass("player") == "Paladin" then
         if UnitExists('target') and not UnitIsFriend('player', 'target') then
@@ -4181,15 +4171,11 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
             end
             if targetPercentage >= QHV.RatioFull then
                 Message(string.format("%s doesn't need healing", UnitFullName(Target) or Target), "Info", 2);
-                SetCVar("autoSelfCast", AutoSelfCast);
-                QuickHealBusy = false;
                 if hadHostileTarget then TargetLastTarget(); end
                 return;
             end
         else
             Message(string.format("%s cannot be healed", UnitFullName(Target) or Target), "Error", 2);
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             if hadHostileTarget then TargetLastTarget(); end
             return;
         end
@@ -4211,8 +4197,6 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
             else
                 Message("You don't need healing", "Info", 2);
             end
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             if hadHostileTarget then TargetLastTarget(); end
             return;
         end
@@ -4244,8 +4228,6 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
         end
         if not SpellID then
             Message("Spell not found", "Error", 2);
-            SetCVar("autoSelfCast", AutoSelfCast);
-            QuickHealBusy = false;
             if hadHostileTarget then TargetLastTarget(); end
             return;
         end
@@ -4257,9 +4239,40 @@ function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
     else
         Message("You have no healing spells to cast", "Error", 2);
     end
+end
+
+function QuickHOT(Target, SpellID, extParam, forceMaxRank, noHpCheck)
+    -- Block if on GCD or mid-cast to prevent CastCheckSpellHOT() from
+    -- queuing a range-check spell through Nampower
+    if has_nampower and GetCastInfo then
+        local ok, castInfo = pcall(GetCastInfo)
+        if ok and castInfo then
+            if castInfo.castRemainingMs and castInfo.castRemainingMs > 0 then
+                QuickHeal_debug("QuickHOT blocked: cast in progress ("
+                    .. castInfo.castRemainingMs .. "ms remaining)")
+                return
+            end
+            if castInfo.gcdRemainingMs and castInfo.gcdRemainingMs > 0 then
+                QuickHeal_debug("QuickHOT blocked: on GCD ("
+                    .. castInfo.gcdRemainingMs .. "ms remaining)")
+                return
+            end
+        end
+    end
+
+    QuickHealBusy = true;
+    local AutoSelfCast = GetCVar("autoSelfCast");
+    SetCVar("autoSelfCast", 0);
+
+    -- pcall ensures autoSelfCast is always restored even if an error occurs
+    local ok, err = pcall(QuickHOT_Inner, Target, SpellID, extParam, forceMaxRank, noHpCheck)
 
     SetCVar("autoSelfCast", AutoSelfCast);
     QuickHealBusy = false;
+
+    if not ok then
+        QuickHeal_debug("QuickHOT error: " .. tostring(err))
+    end
 end
 
 function ToggleDownrankWindow()

@@ -493,9 +493,10 @@ function QuickHeal_Priest_FindPoHTarget()
     end
 
     -- Raid mode: score each subgroup by total health deficit
-    local groupDeficit = {}  -- [groupNum] = total deficit
-    local groupMember = {}   -- [groupNum] = unitID of a healable member in that group
-    local groupCount = {}    -- [groupNum] = number of injured healable members
+    local groupDeficit = {}       -- [groupNum] = total deficit
+    local groupMember = {}        -- [groupNum] = unitID of most injured member in that group
+    local groupMemberDeficit = {} -- [groupNum] = deficit of the most injured member
+    local groupCount = {}         -- [groupNum] = number of injured healable members
 
     for i = 1, numRaid do
         local unit = "raid" .. i
@@ -514,8 +515,11 @@ function QuickHeal_Priest_FindPoHTarget()
                 if deficit > 0 then
                     groupDeficit[subgroup] = (groupDeficit[subgroup] or 0) + deficit
                     groupCount[subgroup] = (groupCount[subgroup] or 0) + 1
-                    if not groupMember[subgroup] then
+                    -- Track the most injured member per group so the
+                    -- RatioFull check in QuickHeal() is least likely to reject them
+                    if not groupMember[subgroup] or deficit > (groupMemberDeficit[subgroup] or 0) then
                         groupMember[subgroup] = unit
+                        groupMemberDeficit[subgroup] = deficit
                     end
                 end
             end
