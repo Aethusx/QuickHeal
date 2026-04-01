@@ -2657,13 +2657,31 @@ local function _CastSpell(spellID, spellbookType)
     CastSpell(spellID, spellbookType);
 end
 
+-- Check if the druid is in Tree of Life form (Turtle WoW)
+-- Healing Touch is not castable in Tree form, so we need to detect it
+-- and use a Tree-compatible cast-time spell (Regrowth) for range checks
+local function IsInTreeOfLifeForm()
+    for i = 1, GetNumShapeshiftForms() do
+        local _, name, isActive = GetShapeshiftFormInfo(i)
+        if isActive and name and string.find(string.lower(name), "tree of life") then
+            return true
+        end
+    end
+    return false
+end
+
 function CastCheckSpell()
     local _, class = UnitClass('player');
     class = string.lower(class);
     if class == "druid" then
-        -- Use Healing Touch (cast-time spell) to avoid Nampower/SuperWoW
-        -- auto-casting instant Rejuvenation on self during range checks
-        _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_TOUCH)[1].SpellID, BOOKTYPE_SPELL);
+        if IsInTreeOfLifeForm() then
+            -- Regrowth is a cast-time spell castable in Tree of Life form
+            _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_REGROWTH)[1].SpellID, BOOKTYPE_SPELL);
+        else
+            -- Use Healing Touch (cast-time spell) to avoid Nampower/SuperWoW
+            -- auto-casting instant Rejuvenation on self during range checks
+            _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_TOUCH)[1].SpellID, BOOKTYPE_SPELL);
+        end
     elseif class == "paladin" then
         _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HOLY_LIGHT)[1].SpellID, BOOKTYPE_SPELL);
     elseif class == "priest" then
@@ -2684,6 +2702,8 @@ function CastCheckSpellHOT()
     if class == "druid" then
         if moving then
             _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_REJUVENATION)[1].SpellID, BOOKTYPE_SPELL);
+        elseif IsInTreeOfLifeForm() then
+            _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_REGROWTH)[1].SpellID, BOOKTYPE_SPELL);
         else
             _CastSpell(QuickHeal_GetSpellInfo(QUICKHEAL_SPELL_HEALING_TOUCH)[1].SpellID, BOOKTYPE_SPELL);
         end
